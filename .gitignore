@@ -1,0 +1,13 @@
+# build artefacts
+/bin/
+/obj/
+/dist/
+
+# Go
+*.test
+coverage.out
+
+# Editor / OS cruft
+.DS_Store
+.idea/
+.vscode/
