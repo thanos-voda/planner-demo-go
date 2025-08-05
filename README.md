@@ -1,5 +1,21 @@
 # Pipes Network Risk Assessment and Planning System
 
+## Quick Start
+
+```bash
+# Test the neighbourhood algorithm
+go test ./internal/neighbourhood -v
+
+# Run step-by-step visualization
+go run cmd/visualization/main.go
+
+# Run budget analysis demo
+go run cmd/budget_analysis/main.go
+
+# Run advanced network demo
+go run cmd/advanced_demo/main.go
+```
+
 ## Overview
 
 This Go application provides a comprehensive risk assessment and project planning system for large-scale pipe networks. It implements sophisticated algorithms to identify high-risk areas and optimize infrastructure investment decisions based on various metrics including Likelihood of Failure (LoF), Return on Investment (ROI), and Business Risk Exposure (BRE).
@@ -83,16 +99,34 @@ This Go application provides a comprehensive risk assessment and project plannin
 - Multiple strategy comparison
 - Detailed metrics and recommendations
 
+### Visualization Demo (`cmd/visualization/`)
+- Step-by-step algorithm execution
+- Shows every decision the algorithm makes
+- ASCII graph visualization
+- Perfect for understanding algorithm mechanics
+
+### Budget Analysis Demo (`cmd/budget_analysis/`)
+- Tests different budget scenarios
+- Shows impact of starting node selection
+- Demonstrates ROI optimization
+- Compares algorithm behavior under constraints
+
 ## Usage
 
 ### Running the Demos
 
 ```bash
-# Basic demo
+# Basic demo (1000 pipes, simple analysis)
 go run ./cmd/demo
 
-# Advanced demo with ROI analysis
+# Advanced demo with ROI analysis (2000 pipes, financial metrics)
 go run ./cmd/advanced_demo
+
+# Step-by-step algorithm visualization (small network, detailed steps)
+go run ./cmd/visualization
+
+# Budget impact analysis (shows different budget scenarios)
+go run ./cmd/budget_analysis
 ```
 
 ### Running Tests
@@ -101,16 +135,90 @@ go run ./cmd/advanced_demo
 # All tests
 go test ./...
 
-# Neighbourhood tests only
+# Neighbourhood tests only (recommended for development)
 go test ./internal/neighbourhood -v
 
-# Integration tests
+# Specific test suites
+go test ./internal/neighbourhood -v -run TestNeighbourhood
 go test ./internal/neighbourhood -v -run TestNeighbourhoodIntegration
+go test ./internal/neighbourhood -v -run TestNeighbourhoodEdgeCases
+
+# Build verification (ensure everything compiles)
+go build ./...
 ```
+
+### Visualization and Analysis Workflow
+
+For understanding the algorithm:
+
+1. **Start with step-by-step visualization**:
+   ```bash
+   go run ./cmd/visualization
+   ```
+   This shows exactly how the algorithm makes decisions.
+
+2. **Explore budget impacts**:
+   ```bash
+   go run ./cmd/budget_analysis
+   ```
+   See how different budgets affect project selection.
+
+3. **Run realistic scenarios**:
+   ```bash
+   go run ./cmd/advanced_demo
+   ```
+   Experience full-scale network analysis with financial metrics.
+
+4. **Verify with tests**:
+   ```bash
+   go test ./internal/neighbourhood -v
+   ```
+   Ensure algorithm correctness across various scenarios.
 
 ## Sample Output
 
-### Network Analysis
+### Step-by-Step Visualization Output
+```
+=== Neighbourhood Algorithm Step-by-Step Visualization ===
+
+Network Structure:
+Node | LoF  | Length | Neighbors
+-----|------|--------|----------
+  0  | 0.8 |   2.0  | [1 2 3 4]
+  1  | 0.3 |   1.5  | [0]
+  2  | 0.6 |   3.0  | [0 5]
+
+Algorithm Execution:
+Step  1: Initialize: Add root node 0 with cumLen=2.0 to queue
+         Queue: [0:2.0]
+Step  2: Pop and visit node 0 (cumLen=2.0)
+         Queue: [empty]
+         Visited: 0(2.0)
+Step  3:   → Explore neighbor 1: newCumLen=3.5 (first time) → Add to queue
+
+ASCII Graph Visualization:
+        [3] LoF:0.9, Len:1.0
+         |  ✓
+    [1]--->>>[0]<<<---[2]---[5]
+   1.5     2.0     3.0     2.5
+        [4]               (6)
+        4.0               1.8
+
+Legend: [X] = Visited, ( ) = Not visited, >>> = Start node
+```
+
+### Budget Analysis Output
+```
+=== Budget Scenario Analysis ===
+Budget: 3.0 → Nodes: [0,3] → ROI: 4.07 → High-risk: 2/3
+Budget: 5.0 → Nodes: [0,1,2,3] → ROI: 5.20 → High-risk: 2/3  
+Budget: 8.0 → Nodes: [0,1,2,3,4,5] → ROI: 5.66 → High-risk: 3/3
+Budget: 12.0 → Nodes: [0,1,2,3,4,5,6] → ROI: 5.99 → High-risk: 3/3
+
+Recommended: Budget 8.0 provides optimal ROI (5.66) with full high-risk coverage
+```
+
+### Network Analysis (Advanced Demo)
 ```
 Network Overview:
   Total Pipes: 2000
@@ -142,6 +250,19 @@ Expected Outcomes:
   Number of Projects: 5
 ```
 
+### Test Output
+```
+=== RUN   TestNeighbourhood
+=== RUN   TestNeighbourhood/root_only_-_exact_budget
+=== RUN   TestNeighbourhood/root_and_one_neighbor
+=== RUN   TestNeighbourhood/all_reachable_nodes
+--- PASS: TestNeighbourhood (0.00s)
+=== RUN   TestNeighbourhoodIntegration
+--- PASS: TestNeighbourhoodIntegration (0.00s)
+PASS
+ok      github.com/thanos-fil/planner-demo-go/internal/neighbourhood    0.168s
+```
+
 ## Key Algorithms
 
 ### Neighbourhood Finding (Dijkstra-like)
@@ -158,43 +279,40 @@ Expected Outcomes:
 4. **Ranking**: Sort projects by combined priority metrics
 5. **Selection**: Choose top projects within budget constraints
 
-## Future Enhancements
+## Troubleshooting
 
-1. **Advanced Metrics**
-   - Age-based risk modeling
-   - Material-specific failure rates
-   - Environmental impact factors
+### Common Issues
 
-2. **Optimization Algorithms**
-   - Genetic algorithms for project selection
-   - Multi-objective optimization
-   - Budget constraint handling
+**Import errors or module issues:**
+```bash
+# Ensure you're in the project root directory
+cd /path/to/planner-demo-go
 
-3. **Visualization**
-   - Network graph visualization
-   - Risk heat maps
-   - Project impact analysis
+# Clean and rebuild
+go clean -cache
+go mod tidy
+```
 
-4. **Real-world Integration**
-   - GIS data import
-   - Historical failure data
-   - Maintenance scheduling
+**Tests failing:**
+```bash
+# Run tests with verbose output
+go test ./... -v
 
-## Performance
+# Run specific package tests
+go test ./internal/neighbourhood -v
+```
 
-- Handles 2000+ pipe networks efficiently
-- O(n log n) neighbourhood finding complexity
-- Memory-efficient graph representation
-- Comprehensive test coverage with multiple scenarios
+**Large output in demos:**
+```bash
+# Pipe output to less for easier viewing
+go run cmd/visualization/main.go | less
 
-## Testing
+# Save output to file
+go run cmd/advanced_demo/main.go > network_analysis.txt
+```
 
-The system includes extensive test coverage:
+### Performance Notes
 
-- **Unit Tests**: Core neighbourhood algorithm functionality
-- **Integration Tests**: Cross-package functionality
-- **Edge Cases**: Single nodes, disconnected networks, boundary conditions
-- **Mock Networks**: Realistic test scenarios
-- **Performance Tests**: Large network handling
-
-All tests pass and provide confidence in the system's reliability and correctness.
+- The neighbourhood algorithm is O(V log V + E) where V is nodes and E is edges
+- Memory usage scales linearly with network size
+- For networks >5000 pipes, consider implementing result caching
